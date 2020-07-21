@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Recently seen movies
+{% endblock %}
+
+{% block content  %}
+    <div id="last_seen_movies">
+        Last seen:
+        {% for line in movies %}
+            <div class="col-6">
+                <p>{{ line.name }} - {{ line.year_of_production }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            {{ form.as_p }}
+        </p>
+        <input type="submit" value="Add"/>
+    </form>
+    {% if movies|length >= 3 %}
+        <div id="get_movie_suggestion">
+            <h6><a href="/movies/suggest">Ok, show me something</a></h6>
+        </div>
+    {% endif %}
+{% endblock %}
