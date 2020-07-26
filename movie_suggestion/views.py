@@ -1,6 +1,5 @@
 import imdb
 import datetime
-import pdb
 from collections import Counter
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, FormView, View
@@ -24,7 +23,6 @@ class SignUpView(FormView):
 	template_name = 'registration/signup.html'
 
 	def post(self, request, *args, **kwargs):
-		# pdb.set_trace()
 		form = UserCreationForm(request.POST)
 		if form.is_valid():
 			form.save()
@@ -54,16 +52,12 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 
 	def post(self, request, *args, **kwargs):
 		form = LastMovieForm(request.POST)
-		# pdb.set_trace()
 		if form.is_valid():
-			# form.save()
 			movie_title = form.cleaned_data.get('name')
 			movie_year = form.cleaned_data.get('year_of_production')
 			movie = Movie(name=movie_title, year_of_production=movie_year, user=request.user)
-			# movie.save()
 			movie_data = self.get_movie_data(movie)
 			movie.imdb_id = movie_data.movieID
-			# pdb.set_trace()
 			movie.genres = ','.join(movie_data.data.get('genres', ' '))
 			movie.keywords = ','.join(movie_data.get('keywords', ' '))
 			director = self.get_movie_director(movie_data)
@@ -90,7 +84,6 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 			director = movie_rec.get('director')
 			director = director[0]
 			director_data = IMDB.get_person(director.personID)
-			# pdb.set_trace()
 			director_name = director_data.get('name', '').split(' ')[0]
 			director_lastname = director_data.get('name', '').split(' ')[-1]
 			director_birthday = director_data.get('birth date', '')
@@ -102,7 +95,7 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 			director_object.save()
 			return director_object
 		except IndexError:
-			print("Director of movie {movie.get('name')} not found")
+			print(f"Director of movie {movie_rec.get('name')} not found")
 			return
 		except Exception as e:
 			print(e)
@@ -116,7 +109,6 @@ class SuggestMovieView(LoginRequiredMixin, TemplateView):
 		user_movies = Movie.objects.filter(user=request.user.id)
 		user_movies_ids = list(user_movies.values_list('imdb_id', flat=True))
 		last_movies = user_movies.order_by('-id')[:3]
-		# pdb.set_trace()
 		genres = []
 		keywords = Counter()
 		for line in last_movies:
