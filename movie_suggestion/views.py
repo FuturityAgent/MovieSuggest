@@ -1,6 +1,6 @@
-import imdb
-import datetime
 from collections import Counter
+import datetime
+import imdb
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, FormView, View
 from django.contrib.auth import login, authenticate, logout
@@ -13,12 +13,15 @@ IMDB = imdb.IMDb()
 
 valid_rec_types = ['movie', 'tv movie']
 
+
 class IndexView(LoginRequiredMixin, TemplateView):
+	"""Home page view. If user is not signed in, it will redirect him to the login page"""
 	template_name = 'index.html'
 	login_url = '/login/'
 
 
 class SignUpView(FormView):
+	"""Sign up view, where user can create an account"""
 	form_class = UserCreationForm
 	template_name = 'registration/signup.html'
 
@@ -34,23 +37,32 @@ class SignUpView(FormView):
 
 
 class LogoutView(View):
+	"""View used for logout from current account"""
+
 	def get(self, request):
 		logout(request)
 		return redirect('home')
 
 
 class AddLastMovieView(LoginRequiredMixin, FormView):
+	"""View contains LastMovieForm, where user can add a single Movie record"""
+
 	form_class = LastMovieForm
 	template_name = 'movies/last_movie.html'
 	login_url = '/login/'
 
 	def get_context_data(self, **kwargs):
+		"""Get context for the view, mostly Movie records, created by a current user
+		:returns
+		context - dict
+		"""
 		context = super().get_context_data(**kwargs)
 		last_seen_movies = Movie.objects.filter(user=self.request.user.id)
 		context['movies'] = last_seen_movies
 		return context
 
 	def post(self, request, *args, **kwargs):
+		"""Add a Movie and a Director records to the database"""
 		form = LastMovieForm(request.POST)
 		if form.is_valid():
 			movie_title = form.cleaned_data.get('name')
@@ -67,19 +79,26 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 		return redirect('last-movie')
 
 	def get_movie_data(self, movie_obj: Movie):
+		"""Gets detailed data about movie from IMDb database,
+		obtains keywords for movie with specific IMDb id"""
 
 		movies = IMDB.search_movie(movie_obj.name)
 		movies = [rec for rec in movies if rec.get('year', 0) == movie_obj.year_of_production \
 				  and rec.get('kind') in valid_rec_types]
 
 		if not movies:
-			return
+			return None
 		match_movie = movies[0]
 		movie_rec = IMDB.get_movie(match_movie.movieID)
 		movie_rec['keywords'] = IMDB.get_movie(match_movie.movieID, info='keywords').data.get('keywords')
 		return movie_rec
 
 	def get_movie_director(self, movie_rec):
+		"""Gets a detailed data about movie director, creates a single
+		Director record in the database
+		:returns
+		director_obj - Director
+		"""
 		try:
 			director = movie_rec.get('director')
 			director = director[0]
@@ -103,9 +122,16 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 
 
 class SuggestMovieView(LoginRequiredMixin, TemplateView):
+	"""View to show movies recommended for current user"""
 	login_url = '/login/'
 
-	def get(self, request):
+	def get(self, request, *args, **kwargs):
+		"""Based on last 3 Movie records inserted to the database by an user, creates a list of
+		5 most common keywords then for each keywords gets a list of movies matching this keyword,
+		concatenates all lists together and gets 10 most common positions.
+		:returns
+		render function
+		"""
 		user_movies = Movie.objects.filter(user=request.user.id)
 		user_movies_ids = list(user_movies.values_list('imdb_id', flat=True))
 		last_movies = user_movies.order_by('-id')[:3]
@@ -120,18 +146,19 @@ class SuggestMovieView(LoginRequiredMixin, TemplateView):
 		potential_movies = [IMDB.get_keyword(k_word) for k_word in top_common_keywords]
 		potential_movies = Counter([m for m_list in potential_movies for m in m_list if m.get('kind') in valid_rec_types])
 		best_matching_movies = [IMDB.get_movie(m[0].movieID) for m in potential_movies.most_common(10)]
-		filtered_movies = [m for m in best_matching_movies if m.movieID not in user_movies_ids and any([g in genres for g in m.get('genres')])]
+		filtered_movies = [m for m in best_matching_movies if m.movieID not in user_movies_ids and\
+							any([g in genres for g in m.get('genres')])]
 
 		movies_to_suggest = [
 			{
 				'title': m.get('title'),
-			 	'year': m.get('year'),
-			 	'director': m.get('director', [{}])[0].get('name', 'unknown')
+				'year': m.get('year'),
+				'director': m.get('director', [{}])[0].get('name', 'unknown')
 			}
-			for m in filtered_movies
+		for m in filtered_movies
 		]
 		k_words = [k.replace('-', ' ') for k in top_common_keywords]
-		return render(request, template_name='movies/suggestions.html', context={'movies': movies_to_suggest,
-																				 'keywords': k_words})
-		pdb.set_trace()
+		return render(request, template_name='movies/suggestions.html', context={
+			'movies': movies_to_suggest,
+			'keywords': k_words})
 # Create your views here.
