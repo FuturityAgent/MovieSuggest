@@ -34,7 +34,7 @@ class SignUpView(FormView):
 			user = authenticate(username=username, password=password)
 			login(request, user)
 			return redirect('home')
-
+		return redirect('signup')
 
 class LogoutView(View):
 	"""View used for logout from current account"""

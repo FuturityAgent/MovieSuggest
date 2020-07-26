@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', auth_views.LoginView.as_view()),
     path('logout/', views.LogoutView.as_view()),
-    path('register/', views.SignUpView.as_view()),
+    path('register/', views.SignUpView.as_view(), name='signup'),
     path('movies/last', views.AddLastMovieView.as_view(), name='last-movie'),
     path('movies/suggest', views.SuggestMovieView.as_view(), name='suggest-movie'),
     path('', views.IndexView.as_view(), name='home')
