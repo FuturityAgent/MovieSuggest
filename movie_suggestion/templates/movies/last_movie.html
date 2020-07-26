@@ -7,11 +7,11 @@
 {% block content  %}
     <div id="last_seen_movies">
         Last seen:
+        <ul class="list-group">
         {% for line in movies %}
-            <div class="col-6">
-                <p>{{ line.name }} - {{ line.year_of_production }}</p>
-            </div>
+                <li class="list-group-item">{{ line.name }} - {{ line.year_of_production }} by {{ line.director }}</li>
         {% endfor %}
+        </ul>
     </div>
     <form method="post">
         {% csrf_token %}

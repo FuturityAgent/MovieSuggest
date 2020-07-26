@@ -9,10 +9,10 @@ class Person(models.Model):
 	imdb_id = models.CharField(max_length=20, default='')
 
 	def __str__(self):
-		return f"{self.name} {self.lastname} born {self.date_of_birth}"
+		return f"{self.name} {self.lastname}"
 
 	def __repr__(self):
-		return f"{self.name} {self.lastname} born {self.date_of_birth}"
+		return f"{self.name} {self.lastname}"
 
 class Director(Person):
 	no_of_oscars = models.IntegerField(default=0)

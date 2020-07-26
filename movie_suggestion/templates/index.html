@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
     <h2>
-        Hello, I think you need an advice :)
+        Hello {{ request.user.username }}, I think you are looking for an advice :)
     </h2>
     <h4><a href="/movies/last">Let's start</a></h4>
 {% endblock %}

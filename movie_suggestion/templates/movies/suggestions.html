@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    My suggestions
+{% endblock %}
+
+{% block content %}
+    <div>
+        <h3> I think you would like following movies:</h3>
+        <ul class="list-group" style="background-color:cyan">
+        {% for record in movies %}
+                <li class="list-group-item">{{ record.title }} - {{ record.year }} by {{ record.director }}</li>
+
+        {% endfor %}
+                </ul>
+    </div>
+    <div style="padding-top: 40px;">
+        <h4>This movies were recommended for you because last movies you saw contained such topics as:</h4>
+        <ul>
+            {% for word in keywords %}
+                <li> {{ word }} </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
