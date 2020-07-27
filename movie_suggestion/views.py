@@ -34,7 +34,7 @@ class SignUpView(FormView):
 			user = authenticate(username=username, password=password)
 			login(request, user)
 			return redirect('home')
-		return redirect('signup')
+		return render(request, template_name='registration/signup.html', context={'form': form})
 
 class LogoutView(View):
 	"""View used for logout from current account"""
