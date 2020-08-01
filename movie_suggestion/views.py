@@ -1,6 +1,7 @@
 from collections import Counter
 import datetime
 import imdb
+import time
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, FormView, View
 from django.contrib.auth import login, authenticate, logout
@@ -69,11 +70,17 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 			movie_year = form.cleaned_data.get('year_of_production')
 			movie = Movie(name=movie_title, year_of_production=movie_year, user=request.user)
 			movie_data = self.get_movie_data(movie)
+			if not movie_data:
+				context = self.get_context_data()
+				context['form'] = LastMovieForm()
+				context['errors'] = [f"Movie {movie_title} released in the year {movie_year} doesn't exist :("]
+				return render(request, 'movies/last_movie.html', context=context)
 			movie.imdb_id = movie_data.movieID
 			movie.genres = ','.join(movie_data.data.get('genres', ' '))
 			movie.keywords = ','.join(movie_data.get('keywords', ' '))
 			director = self.get_movie_director(movie_data)
-			movie.director = director
+			if director:
+				movie.director = director
 			movie.save()
 			return redirect('last-movie')
 		return redirect('last-movie')
@@ -102,6 +109,13 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 		try:
 			director = movie_rec.get('director')
 			director = director[0]
+			#if director already exists in the database, stop and return existing record
+			director_records = Director.objects.filter(imdb_id=director.personID)
+			if director_records and director_records[0].imdb_id != '':
+				return director_records[0]
+			elif director_records and director_records[0].imdb_id == '':
+				return None
+
 			director_data = IMDB.get_person(director.personID)
 			director_name = director_data.get('name', '').split(' ')[0]
 			director_lastname = director_data.get('name', '').split(' ')[-1]
@@ -109,7 +123,7 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 			director_birthday = datetime.datetime.strptime(director_birthday, "%Y-%m-%d").date()
 			director_object = Director(name=director_name,
 									   lastname=director_lastname,
-									   date_of_birth=director_birthday)
+									   date_of_birth=director_birthday, imdb_id= director.personID)
 
 			director_object.save()
 			return director_object
@@ -132,6 +146,7 @@ class SuggestMovieView(LoginRequiredMixin, TemplateView):
 		:returns
 		render function
 		"""
+		start = time.time()
 		user_movies = Movie.objects.filter(user=request.user.id)
 		user_movies_ids = list(user_movies.values_list('imdb_id', flat=True))
 		last_movies = user_movies.order_by('-id')[:3]
@@ -158,7 +173,18 @@ class SuggestMovieView(LoginRequiredMixin, TemplateView):
 		for m in filtered_movies
 		]
 		k_words = [k.replace('-', ' ') for k in top_common_keywords]
+		print("ZNALEZIENIE FILMÓW DO POLECENIA ZAJĘŁO: " + str(time.time() - start) + " sekund")
 		return render(request, template_name='movies/suggestions.html', context={
 			'movies': movies_to_suggest,
 			'keywords': k_words})
+
+
+class GetMyDirectorsView(LoginRequiredMixin, TemplateView):
+	login_url = '/login/'
+
+	def get(self, request, *args, **kwargs):
+		user_movies = Movie.objects.filter(user=request.user.id)
+		directors = Counter([movie.director for movie in user_movies if movie.director])
+		directors = [{'name': person[0], 'no_of_movies': person[1]} for person in directors.most_common()]
+		return render(request, 'directors/top_directors.html', context={'directors': directors})
 # Create your views here.

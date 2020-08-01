@@ -29,6 +29,11 @@
                 <li class="nav-item active">
                     <a class="nav-link" href="/">Home<span class="sr-only">(current)</span></a>
                 </li>
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/directors">My directors</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 {% if request.user.is_authenticated %}
                 <ul class="navbar-nav">

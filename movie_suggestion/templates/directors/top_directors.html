@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %} My directors {% endblock %}
+{% block content %}
+    <div>
+        {% for person in directors %}
+            <div class="list-group-item">
+                {{ person.name }} - you saw {{ person.no_of_movies }} his movie{% if person.no_of_movies > 1 %}s{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
