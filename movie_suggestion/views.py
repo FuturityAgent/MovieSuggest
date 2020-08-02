@@ -75,6 +75,7 @@ class AddLastMovieView(LoginRequiredMixin, FormView):
 				context['form'] = LastMovieForm()
 				context['errors'] = [f"Movie {movie_title} released in the year {movie_year} doesn't exist :("]
 				return render(request, 'movies/last_movie.html', context=context)
+			movie.name = movie_data.data.get('title')
 			movie.imdb_id = movie_data.movieID
 			movie.genres = ','.join(movie_data.data.get('genres', ' '))
 			movie.keywords = ','.join(movie_data.get('keywords', ' '))
