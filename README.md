@@ -1,7 +1,7 @@
 ### Description
 Simple app, which recommends movies for an user
 based on last entered positions.
-In order to get recommendations, one need to insert at
+In order to get recommendations, one needs to insert at
 least 3 last seen movies.
 
 ### Installation
