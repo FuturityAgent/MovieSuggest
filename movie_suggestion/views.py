@@ -4,6 +4,7 @@ import imdb
 import time
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, FormView, View
+from django.views.generic.edit import DeleteView
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
@@ -14,6 +15,9 @@ IMDB = imdb.IMDb()
 
 valid_rec_types = ['movie', 'tv movie']
 
+
+def not_found_view(request, exception):
+	return render(request, "error_handlers/not_found_handler.html", status=404)
 
 class IndexView(LoginRequiredMixin, TemplateView):
 	"""Home page view. If user is not signed in, it will redirect him to the login page"""
@@ -174,10 +178,15 @@ class SuggestMovieView(LoginRequiredMixin, TemplateView):
 		for m in filtered_movies
 		]
 		k_words = [k.replace('-', ' ') for k in top_common_keywords]
-		print("ZNALEZIENIE FILMÓW DO POLECENIA ZAJĘŁO: " + str(time.time() - start) + " sekund")
+		print("Getting movies took: " + str(round(time.time() - start, 2)) + " seconds")
 		return render(request, template_name='movies/suggestions.html', context={
 			'movies': movies_to_suggest,
 			'keywords': k_words})
+
+
+class DeleteMovieView(LoginRequiredMixin, DeleteView):
+	model = Movie
+	success_url = '/movies/last'
 
 
 class GetMyDirectorsView(LoginRequiredMixin, TemplateView):
@@ -189,3 +198,5 @@ class GetMyDirectorsView(LoginRequiredMixin, TemplateView):
 		directors = [{'name': person[0], 'no_of_movies': person[1]} for person in directors.most_common()]
 		return render(request, 'directors/top_directors.html', context={'directors': directors})
 # Create your views here.
+
+

@@ -25,5 +25,8 @@ urlpatterns = [
     path('directors/', views.GetMyDirectorsView.as_view(), name='my-directors'),
     path('movies/last', views.AddLastMovieView.as_view(), name='last-movie'),
     path('movies/suggest', views.SuggestMovieView.as_view(), name='suggest-movie'),
+    path('movies/<int:pk>/delete', views.DeleteMovieView.as_view(), name='delete-movie'),
     path('', views.IndexView.as_view(), name='home')
 ]
+
+handler404 = "movie_suggestion.views.not_found_view"

@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <title>{% block title %} Strona główna{% endblock %}</title>
     {% include "static/js/bootstrap_script.html" %}
-    {% block style %}
-        <style>
-            body{
+    <style>
+        body{
                 background-color:lightcyan;
                 font-size:14 px;
             }
             .list-group-item{
                 background-color:cyan;
             }
-        </style>
-    {% endblock %}
+        {% block style %} {% endblock %}
+     </style>
 
 </head>
 <body>

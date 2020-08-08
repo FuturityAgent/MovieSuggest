@@ -3,13 +3,70 @@
 {% block title %}
     Recently seen movies
 {% endblock %}
+{%  block style %}
+          #loader {
+            margin-left:auto;
+            margin-right:auto;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid blue;
+            border-bottom: 16px solid blue;
+            width: 480px;
+            height: 480px;
+            -webkit-animation: spin 3s ease-in-out infinite;
+            animation: spin 3s ease-in-out infinite;
+        }
+
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+{% endblock %}
+{% block javascript %}
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function delete_movie_function(e, movie_id){
+            if(confirm("Do you want to delete selected movie")){
+                $("#movie-"+movie_id+"-delete").submit();
+            }else{
+                e.preventDefault();
+            }
+        };
+
+        function suggest_view_redirect(){
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'suggest-movie' %}",
+                beforeSend: function(){
+                    $("#last_seen_movies").hide();
+                    $("#last_movie_form").hide();
+                    $("#get_movie_suggestion").hide();
+                    $("#loader").show();
+                }
+            });
+            return true;
+        };
+    </script>
+{% endblock %}
 
 {% block content  %}
+    <div id="loader" style="display:none;">
+
+    </div>
     <div id="last_seen_movies">
         Last seen:
         <ul class="list-group">
         {% for line in movies %}
-                <li class="list-group-item">{{ line.name }} - {{ line.year_of_production }} by {{ line.director }}</li>
+                <li class="list-group-item">{{ line.name }} - {{ line.year_of_production }} by {{ line.director }}
+
+                    <form id="movie-{{ line.id }}-delete" method="POST" style="display:inline;float:right;" action="{% url 'delete-movie'  line.id %}">
+                       {% csrf_token %} <input class="btn btn-link" type="submit" onClick="delete_movie_function({{ line.id }})" value="Delete"/>
+                    </form></li>
         {% endfor %}
         </ul>
     </div>
@@ -20,23 +77,27 @@
             </div>
         {% endfor %}
     </div>
-    <div>
+    <div id="last_movie_form">
+        <div>
         <h5>Please enter title and year of release last movies you saw</h5>
         {% if movies|length < 3 %}
             <h5>You need to enter at least 3 positions before, before we will be able
             to find movies you'd propably like to watch</h5>
         {% endif %}
     </div>
-    <form method="post">
+        <form method="post">
         {% csrf_token %}
         <p>
             {{ form.as_p }}
         </p>
         <input type="submit" value="Add"/>
     </form>
+    </div>
     {% if movies|length >= 3 %}
         <div id="get_movie_suggestion">
-            <h6><a href="/movies/suggest">Ok, show me something</a></h6>
+            <form method="GET" action="{% url 'suggest-movie' %}">
+                    <input type="submit" class="btn btn-link" onClick="return suggest_view_redirect();" value="Ok, show me something"/>
+            </form>
         </div>
     {% endif %}
 {% endblock %}
